@@ -1,0 +1,43 @@
+name: sistem_parkir_flutter_offline_full
+description: Sistem parkir offline (sqflite) + QR scan/print PDF + backup/restore
+publish_to: "none"
+version: 1.1.0+2
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.6
+
+  # Database
+  sqflite: ^2.3.3
+  sqflite_common_ffi: ^2.3.0
+  path: ^1.9.0
+  path_provider: ^2.1.4
+
+  # Utils
+  intl: ^0.19.0
+  shared_preferences: ^2.3.2
+
+  # QR & Scanner
+  mobile_scanner: ^4.0.1
+  qr_flutter: ^4.1.0
+
+  # Print / Export
+  pdf: ^3.11.0
+  printing: ^5.13.3
+  share_plus: ^10.0.2
+  file_picker: ^8.0.3
+  permission_handler: ^11.3.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/
