@@ -19,42 +19,70 @@ class _MasukPageState extends State<MasukPage> {
 
   Future<void> _save() async {
     if (!_form.currentState!.validate()) return;
-    setState(()=>_busy=true);
+    setState(() => _busy = true);
     final db = await AppDb().database;
     String code;
     while (true) {
       code = generateTicketCode();
-      final exists = await db.query('parkir', where: 'kode=?', whereArgs: [code], limit: 1);
+      final exists =
+          await db.query('parkir', where: 'kode=?', whereArgs: [code], limit: 1);
       if (exists.isEmpty) break;
     }
     // entrance fee
-    final st = await db.query('settings', where: 'key IN (?,?)', whereArgs: ['masuk_motor','masuk_mobil']);
+    final st = await db.query('settings',
+        where: 'key IN (?,?)', whereArgs: ['masuk_motor', 'masuk_mobil']);
     int biayaMasuk = 5000;
     for (final r in st) {
-      if (r['key']=='masuk_motor' && _jenis=='motor') biayaMasuk = int.parse((r['value']??'5000').toString());
-      if (r['key']=='masuk_mobil' && _jenis=='mobil') biayaMasuk = int.parse((r['value']??'5000').toString());
+      if (r['key'] == 'masuk_motor' && _jenis == 'motor') {
+        biayaMasuk = int.parse((r['value'] ?? '5000').toString());
+      }
+      if (r['key'] == 'masuk_mobil' && _jenis == 'mobil') {
+        biayaMasuk = int.parse((r['value'] ?? '5000').toString());
+      }
     }
-    final helmRows = await db.query('settings', where: 'key=?', whereArgs: ['helm_deposit'], limit: 1);
-    final helm = int.tryParse((helmRows.isNotEmpty?helmRows.first['value']:'2000').toString()) ?? 2000;
+    final helmRows = await db
+        .query('settings', where: 'key=?', whereArgs: ['helm_deposit'], limit: 1);
+    final helm = int.tryParse(
+            (helmRows.isNotEmpty ? helmRows.first['value'] : '2000').toString()) ??
+        2000;
     final masuk = DateTime.now();
     final totalMasuk = biayaMasuk + (_titipHelm ? helm : 0);
+
+    // --- PERBAIKAN DI SINI ---
+    // 1. Simpan status 'titipHelm' saat ini ke variabel baru sebelum direset.
+    final bool isTitipHelm = _titipHelm;
+
     await db.insert('parkir', {
       'kode': code,
       'plat': _plat.text.trim().toUpperCase(),
       'jenis': _jenis,
       'waktu_masuk': masuk.toIso8601String(),
       'status': 'IN',
-      'titip_helm': _titipHelm ? 1 : 0,
+      'titip_helm': isTitipHelm ? 1 : 0, // 2. Gunakan variabel baru ini untuk database.
       'biaya_masuk': totalMasuk,
     });
     if (mounted) {
       final platNow = _plat.text.toUpperCase();
+      // Reset form setelah semua data disimpan dan siap dikirim
       _plat.clear();
-      _titipHelm = false;
-      setState(()=>_busy=false);
-      Navigator.push(context, MaterialPageRoute(builder: (_)=> TicketPreviewPage(
-        kode: code, plat: platNow, jenis: _jenis, masuk: masuk, titipHelm: _titipHelm, biayaMasuk: totalMasuk,
-      )));
+      setState(() {
+        _titipHelm = false;
+        _busy = false;
+      });
+      
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => TicketPreviewPage(
+            kode: code,
+            plat: platNow,
+            jenis: _jenis,
+            masuk: masuk,
+            titipHelm: isTitipHelm, // 3. Gunakan variabel baru ini untuk dikirim ke halaman pratinjau.
+            biayaMasuk: totalMasuk,
+          ),
+        ),
+      );
     }
   }
 
@@ -67,13 +95,16 @@ class _MasukPageState extends State<MasukPage> {
           padding: const EdgeInsets.all(16.0),
           child: Form(
             key: _form,
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            child:
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text('Input Masuk', style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: 12),
               TextFormField(
                 controller: _plat,
+                textCapitalization: TextCapitalization.characters,
                 decoration: const InputDecoration(labelText: 'Plat Nomor'),
-                validator: (v)=> v==null||v.trim().isEmpty ? 'Wajib diisi' : null,
+                validator: (v) =>
+                    v == null || v.trim().isEmpty ? 'Wajib diisi' : null,
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
@@ -82,19 +113,23 @@ class _MasukPageState extends State<MasukPage> {
                   DropdownMenuItem(value: 'motor', child: Text('Motor')),
                   DropdownMenuItem(value: 'mobil', child: Text('Mobil')),
                 ],
-                onChanged: (v)=>setState(()=>_jenis=v??'motor'),
+                onChanged: (v) => setState(() => _jenis = v ?? 'motor'),
                 decoration: const InputDecoration(labelText: 'Jenis'),
               ),
               const SizedBox(height: 8),
               CheckboxListTile(
                 value: _titipHelm,
-                onChanged: (v)=>setState(()=>_titipHelm=v??false),
+                onChanged: (v) => setState(() => _titipHelm = v ?? false),
                 title: const Text('Titip helm (+ deposit)'),
                 controlAffinity: ListTileControlAffinity.leading,
                 contentPadding: EdgeInsets.zero,
               ),
               const SizedBox(height: 12),
-              FilledButton.icon(onPressed: _busy?null:_save, icon: const Icon(Icons.qr_code), label: Text(_busy?'Menyimpan...':'Simpan & Buat QR')),
+              FilledButton.icon(
+                  onPressed: _busy ? null : _save,
+                  icon: const Icon(Icons.qr_code),
+                  label: Text(
+                      _busy ? 'Menyimpan...' : 'Simpan & Buat QR')),
               const SizedBox(height: 8),
               const Text('Kode tiket dibuat otomatis & dicek agar unik.'),
             ]),

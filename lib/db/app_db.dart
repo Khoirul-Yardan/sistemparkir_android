@@ -56,6 +56,10 @@ class AppDb {
         await db.insert('settings', {'key':'inap_per_hari','value':'5000'});
         await db.insert('settings', {'key':'inap_minggu','value':'10000'});
         await db.insert('settings', {'key':'switch_hour','value':'18'});
+
+        // Pengaturan Login Default
+        await db.insert('settings', {'key':'login_username','value':'admin'});
+        await db.insert('settings', {'key':'login_password','value':'admin'});
       },
       onUpgrade: (db, oldV, newV) async {
         if (oldV < 2) {
@@ -67,11 +71,16 @@ class AppDb {
           await db.insert('settings', {'key':'inap_per_hari','value':'5000'}, conflictAlgorithm: ConflictAlgorithm.ignore);
           await db.insert('settings', {'key':'inap_minggu','value':'10000'}, conflictAlgorithm: ConflictAlgorithm.ignore);
           await db.insert('settings', {'key':'switch_hour','value':'18'}, conflictAlgorithm: ConflictAlgorithm.ignore);
+
+          // PERUBAHAN: Hapus 'login_enabled'
+          await db.insert('settings', {'key':'login_username','value':'admin'}, conflictAlgorithm: ConflictAlgorithm.ignore);
+          await db.insert('settings', {'key':'login_password','value':'admin'}, conflictAlgorithm: ConflictAlgorithm.ignore);
         }
       },
     );
   }
 
+  // ... sisa kode tidak perlu diubah ...
   Future<Map<String, int>> getTarif(String jenis) async {
     final db = await database;
     final prefix = jenis == 'mobil' ? 'tarif_mobil' : 'tarif_motor';

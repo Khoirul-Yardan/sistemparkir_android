@@ -26,6 +26,10 @@ class _SettingsPageState extends State<SettingsPage> {
   final _inapMinggu = TextEditingController(text: '10000');
   final _switchHour = TextEditingController(text: '18');
 
+  // State untuk Pengaturan Login
+  final _loginUsername = TextEditingController(text: 'admin');
+  final _loginPassword = TextEditingController(text: 'admin');
+
   @override
   void initState() {
     super.initState();
@@ -54,6 +58,10 @@ class _SettingsPageState extends State<SettingsPage> {
     _inapPerHari.text = await getVal('inap_per_hari','5000');
     _inapMinggu.text = await getVal('inap_minggu','10000');
     _switchHour.text = await getVal('switch_hour','18');
+
+    // Muat Pengaturan Login
+    _loginUsername.text = await getVal('login_username', 'admin');
+    _loginPassword.text = await getVal('login_password', 'admin');
   }
 
   Future<void> _save() async {
@@ -72,6 +80,10 @@ class _SettingsPageState extends State<SettingsPage> {
     await put('inap_minggu', _inapMinggu.text);
     await put('switch_hour', _switchHour.text);
 
+    // Simpan Pengaturan Login
+    await put('login_username', _loginUsername.text);
+    await put('login_password', _loginPassword.text);
+
     if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Tersimpan.')));
   }
 
@@ -80,6 +92,11 @@ class _SettingsPageState extends State<SettingsPage> {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
+        // PERUBAHAN: Card untuk Pengaturan Login disederhanakan
+        _section('Pengaturan Login', [
+          _textField('Username', _loginUsername),
+          _textField('Password', _loginPassword),
+        ]),
         _section('Tarif Motor', [
           _numField('Jam Pertama', _mJp),
           _numField('Per Jam', _mPj),
@@ -101,7 +118,7 @@ class _SettingsPageState extends State<SettingsPage> {
         const SizedBox(height: 12),
         Align(
           alignment: Alignment.centerLeft,
-          child: Wrap(spacing: 12, children: [
+          child: Wrap(spacing: 12, runSpacing: 12, children: [
             FilledButton.icon(onPressed: _save, icon: const Icon(Icons.save), label: const Text('Simpan')),
             OutlinedButton.icon(onPressed: () async { final f = await BackupService.exportJson(); if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Backup disimpan ke berkas: ${f.path.split('/').last}'))); }, icon: const Icon(Icons.download), label: const Text('Backup JSON')),
             OutlinedButton.icon(onPressed: () async { final n = await BackupService.importJson(); if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Restore: $n data parkir'))); }, icon: const Icon(Icons.upload), label: const Text('Restore JSON')),
@@ -116,6 +133,14 @@ class _SettingsPageState extends State<SettingsPage> {
     child: TextField(
       controller: c,
       keyboardType: TextInputType.number,
+      decoration: InputDecoration(labelText: label),
+    ),
+  );
+
+  Widget _textField(String label, TextEditingController c) => Padding(
+    padding: const EdgeInsets.only(bottom: 8.0),
+    child: TextField(
+      controller: c,
       decoration: InputDecoration(labelText: label),
     ),
   );

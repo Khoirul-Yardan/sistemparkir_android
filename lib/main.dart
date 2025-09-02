@@ -2,28 +2,23 @@ import 'package:flutter/material.dart';
 import 'dart:io' show Platform;
 import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'package:intl/date_symbol_data_local.dart'; // ✅ tambahkan
+import 'package:intl/date_symbol_data_local.dart';
 
 import 'pages/dashboard_page.dart';
 import 'pages/masuk_page.dart';
 import 'pages/keluar_page.dart';
 import 'pages/rekap_page.dart';
 import 'pages/settings_page.dart';
+import 'pages/login_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // ✅ Inisialisasi database untuk Windows/Linux
   if (Platform.isWindows || Platform.isLinux) {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
   }
-
-  // ✅ Pastikan path database tersedia
-  final dbPath = await getDatabasesPath();
-  print("Database path: $dbPath"); // debug
-
-  // ✅ Fix untuk Locale error
+  
   await initializeDateFormatting('id_ID', null);
 
   runApp(const ParkirApp());
@@ -55,10 +50,15 @@ class ParkirApp extends StatelessWidget {
       title: 'Sistem Parkir Offline',
       theme: theme,
       debugShowCheckedModeBanner: false,
-      home: const Shell(),
+      // PERUBAHAN: Langsung arahkan ke LoginPage sebagai halaman utama
+      home: const LoginPage(),
     );
   }
 }
+
+
+// Widget AuthWrapper sudah tidak diperlukan lagi dan bisa dihapus
+
 
 class Shell extends StatefulWidget {
   const Shell({super.key});
